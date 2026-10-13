@@ -1,0 +1,348 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inventory Barang</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;margin:0;background:#f1f5f9;color:#1e293b}
+header{background:#123b68;color:white;padding:22px}
+header h1{margin:0 0 7px;font-size:25px}
+header p{margin:0;color:#dbeafe}
+main{max-width:1200px;margin:22px auto;padding:0 15px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.card,.panel{background:white;padding:18px;border-radius:12px;box-shadow:0 2px 8px #0000000b}
+.card span{color:#64748b;font-size:13px}
+.card strong{display:block;font-size:23px;margin-top:9px}
+.panel{margin-bottom:18px}
+h2{font-size:18px;margin:0 0 16px}
+.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+label{font-size:13px;font-weight:bold;display:block;margin-bottom:6px}
+input,select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:7px;background:white}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+button{border:0;border-radius:7px;padding:10px 14px;cursor:pointer;font-weight:bold}
+.primary{background:#1769d2;color:white}
+.secondary{background:#e2e8f0;color:#1e293b}
+.danger{background:#fee2e2;color:#b91c1c}
+.edit{background:#fef3c7;color:#92400e;padding:7px 9px}
+.delete{background:#fee2e2;color:#b91c1c;padding:7px 9px}
+.searchbar{display:flex;gap:10px;margin-bottom:14px}
+.searchbar input{flex:1}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:850px}
+th,td{padding:12px 10px;text-align:left;border-bottom:1px solid #e2e8f0;font-size:13px}
+th{background:#1769d2;color:white;white-space:nowrap}
+tbody tr:hover{background:#f8fafc}
+.badge{background:#dcfce7;color:#166534;padding:5px 8px;border-radius:20px}
+.empty{text-align:center;color:#64748b;padding:28px}
+.note{font-size:12px;line-height:1.6;color:#64748b}
+@media(max-width:650px){
+ .cards{grid-template-columns:1fr}
+ .formgrid{grid-template-columns:1fr}
+ header h1{font-size:21px}
+ .searchbar{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>📦 Inventory Barang</h1>
+  <p>Sistem pencatatan stok barang sederhana</p>
+</header>
+
+<main>
+  <section class="cards">
+    <div class="card">
+      <span>Jenis Barang</span>
+      <strong id="jenis">0</strong>
+    </div>
+    <div class="card">
+      <span>Total Stok Barang</span>
+      <strong id="stok">0</strong>
+    </div>
+    <div class="card">
+      <span>Total Nilai Inventory</span>
+      <strong id="nilai">Rp0</strong>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 id="judulForm">Tambah Barang</h2>
+    <form id="formBarang">
+      <div class="formgrid">
+        <div>
+          <label for="kode">Kode Barang</label>
+          <input id="kode" required placeholder="Contoh: BRG001">
+        </div>
+        <div>
+          <label for="nama">Nama Barang</label>
+          <input id="nama" required placeholder="Nama barang">
+        </div>
+        <div>
+          <label for="kategori">Kategori</label>
+          <input id="kategori" required placeholder="Contoh: Elektronik">
+        </div>
+        <div>
+          <label for="jumlah">Stok</label>
+          <input id="jumlah" type="number" min="0" step="1" required placeholder="0">
+        </div>
+        <div>
+          <label for="satuan">Satuan</label>
+          <select id="satuan">
+            <option>Pcs</option>
+            <option>Unit</option>
+            <option>Box</option>
+            <option>Dus</option>
+            <option>Kg</option>
+            <option>Liter</option>
+            <option>Meter</option>
+          </select>
+        </div>
+        <div>
+          <label for="harga">Harga per Satuan (Rp)</label>
+          <input id="harga" type="number" min="0" step="1" required placeholder="0">
+        </div>
+        <div>
+          <label for="lokasi">Lokasi Barang</label>
+          <input id="lokasi" placeholder="Contoh: Rak A1">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="primary" type="submit" id="tombolSimpan">+ Simpan Barang</button>
+        <button class="secondary" type="reset" id="batal" hidden>Batal Edit</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Daftar Inventory</h2>
+    <div class="searchbar">
+      <input id="cari" placeholder="Cari kode, nama, kategori, atau lokasi...">
+      <button class="secondary" id="ekspor">Ekspor CSV</button>
+      <button class="secondary" id="contoh">Isi Contoh</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>No.</th><th>Kode</th><th>Nama Barang</th>
+            <th>Kategori</th><th>Stok</th><th>Satuan</th>
+            <th>Harga Satuan</th><th>Total Nilai</th>
+            <th>Lokasi</th><th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="isiTabel"></tbody>
+      </table>
+    </div>
+    <p class="note" id="jumlahData">0 barang ditampilkan</p>
+  </section>
+
+  <p class="note">
+    Catatan: data tersimpan di browser perangkat ini. Ekspor CSV secara berkala
+    untuk membuat cadangan. Jangan hapus data browser sebelum membuat cadangan.
+  </p>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const formatAngka = n => new Intl.NumberFormat("id-ID").format(n);
+const formatRupiah = n => "Rp" + formatAngka(n);
+
+let barang = [];
+let editId = null;
+
+try {
+  barang = JSON.parse(localStorage.getItem("inventoryBarang") || "[]");
+  if (!Array.isArray(barang)) barang = [];
+} catch {
+  barang = [];
+}
+
+function simpanData() {
+  try {
+    localStorage.setItem("inventoryBarang", JSON.stringify(barang));
+  } catch {
+    alert("Data tidak bisa disimpan. Periksa penyimpanan browser.");
+  }
+}
+
+function aman(teks) {
+  return String(teks ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;",
+    '"':"&quot;", "'":"&#39;"
+  })[c]);
+}
+
+function render() {
+  const kata = $("cari").value.trim().toLowerCase();
+  const hasil = barang.filter(b =>
+    [b.kode,b.nama,b.kategori,b.lokasi]
+      .some(v => String(v || "").toLowerCase().includes(kata))
+  );
+
+  $("jenis").textContent = formatAngka(barang.length);
+  $("stok").textContent = formatAngka(
+    barang.reduce((total,b) => total + b.jumlah, 0)
+  );
+  $("nilai").textContent = formatRupiah(
+    barang.reduce((total,b) => total + b.jumlah * b.harga, 0)
+  );
+
+  if (!hasil.length) {
+    $("isiTabel").innerHTML =
+      '<tr><td colspan="10" class="empty">Belum ada data barang.</td></tr>';
+  } else {
+    $("isiTabel").innerHTML = hasil.map((b,i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td>${aman(b.kode)}</td>
+        <td>${aman(b.nama)}</td>
+        <td>${aman(b.kategori)}</td>
+        <td>${formatAngka(b.jumlah)}</td>
+        <td>${aman(b.satuan)}</td>
+        <td>${formatRupiah(b.harga)}</td>
+        <td><b>${formatRupiah(b.jumlah*b.harga)}</b></td>
+        <td>${aman(b.lokasi || "-")}</td>
+        <td>
+          <button class="edit" data-edit="${b.id}">Edit</button>
+          <button class="delete" data-delete="${b.id}">Hapus</button>
+        </td>
+      </tr>
+    `).join("");
+  }
+  $("jumlahData").textContent = hasil.length + " barang ditampilkan";
+}
+
+$("formBarang").addEventListener("submit", e => {
+  e.preventDefault();
+
+  const data = {
+    id: editId ?? (Date.now() + Math.random()),
+    kode: $("kode").value.trim(),
+    nama: $("nama").value.trim(),
+    kategori: $("kategori").value.trim(),
+    jumlah: Number($("jumlah").value),
+    satuan: $("satuan").value,
+    harga: Number($("harga").value),
+    lokasi: $("lokasi").value.trim()
+  };
+
+  if (!Number.isSafeInteger(data.jumlah) || data.jumlah < 0 ||
+      !Number.isSafeInteger(data.harga) || data.harga < 0) {
+    alert("Stok dan harga harus berupa angka bulat nonnegatif.");
+    return;
+  }
+
+  const duplikat = barang.some(b =>
+    b.kode.toLowerCase() === data.kode.toLowerCase() && b.id !== editId
+  );
+  if (duplikat) {
+    alert("Kode barang sudah digunakan. Gunakan kode yang berbeda.");
+    return;
+  }
+
+  if (editId !== null) {
+    barang = barang.map(b => b.id === editId ? data : b);
+  } else {
+    barang.push(data);
+  }
+
+  simpanData();
+  resetForm();
+  render();
+});
+
+function resetForm() {
+  editId = null;
+  $("formBarang").reset();
+  $("judulForm").textContent = "Tambah Barang";
+  $("tombolSimpan").textContent = "+ Simpan Barang";
+  $("batal").hidden = true;
+}
+
+$("batal").addEventListener("click", resetForm);
+$("cari").addEventListener("input", render);
+
+$("isiTabel").addEventListener("click", e => {
+  const tombolEdit = e.target.closest("[data-edit]");
+  const tombolHapus = e.target.closest("[data-delete]");
+
+  if (tombolEdit) {
+    editId = Number(tombolEdit.dataset.edit);
+    const b = barang.find(x => x.id === editId);
+    if (!b) return;
+
+    ["kode","nama","kategori","jumlah","satuan","harga","lokasi"]
+      .forEach(k => $(k).value = b[k] ?? "");
+
+    $("judulForm").textContent = "Edit Barang";
+    $("tombolSimpan").textContent = "Simpan Perubahan";
+    $("batal").hidden = false;
+    $("formBarang").scrollIntoView({behavior:"smooth"});
+  }
+
+  if (tombolHapus) {
+    const id = Number(tombolHapus.dataset.delete);
+    const b = barang.find(x => x.id === id);
+    if (!b || !confirm("Hapus barang " + b.nama + "?")) return;
+    barang = barang.filter(x => x.id !== id);
+    simpanData();
+    if (editId === id) resetForm();
+    render();
+  }
+});
+
+$("ekspor").addEventListener("click", () => {
+  const kolom = [
+    ["Kode Barang","kode"],["Nama Barang","nama"],
+    ["Kategori","kategori"],["Stok","jumlah"],
+    ["Satuan","satuan"],["Harga Satuan","harga"],
+    ["Total Nilai","total"],["Lokasi","lokasi"]
+  ];
+  const csv = [kolom.map(k => k[0]), ...barang.map(b =>
+    kolom.map(([judul,k]) => {
+      let v = k === "total" ? b.jumlah*b.harga : b[k] ?? "";
+      v = String(v);
+      if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;
+      return '"' + v.replace(/"/g,'""') + '"';
+    })
+  )].map(row => row.join(",")).join("\r\n");
+
+  const blob = new Blob(["\uFEFF" + csv], {
+    type:"text/csv;charset=utf-8;"
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "inventory-barang.csv";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+$("contoh").addEventListener("click", () => {
+  if (barang.length && !confirm("Tambahkan data contoh ke daftar yang ada?")) return;
+  const contoh = [
+    ["BRG001","Laptop","Elektronik",5,"Unit",8000000,"Rak A1"],
+    ["BRG002","Mouse","Elektronik",20,"Pcs",150000,"Rak A2"],
+    ["BRG003","Kertas A4","ATK",30,"Box",55000,"Rak B1"]
+  ];
+  contoh.forEach((r,i) => {
+    const kode = r[0];
+    if (!barang.some(b => b.kode.toLowerCase() === kode.toLowerCase())) {
+      barang.push({
+        id: Date.now()+Math.random()+i,
+        kode:r[0],nama:r[1],kategori:r[2],jumlah:r[3],
+        satuan:r[4],harga:r[5],lokasi:r[6]
+      });
+    }
+  });
+  simpanData();
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
